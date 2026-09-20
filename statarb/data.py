@@ -176,7 +176,9 @@ def volume_adjusted_returns(
     aligned_returns = returns.loc[shared_dates, shared_assets]
     aligned_volume = volume.loc[shared_dates, shared_assets]
 
-    average_volume = aligned_volume.rolling(trailing_window, min_periods=trailing_window).mean()
+    average_volume = aligned_volume.rolling(
+        trailing_window, min_periods=trailing_window
+    ).mean()
 
     # A reported volume of zero is a data gap, not a real quiet day; clipping at
     # one share keeps the ratio finite and the cap below handles the rest.

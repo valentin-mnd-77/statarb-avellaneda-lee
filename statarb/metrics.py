@@ -60,7 +60,11 @@ def performance_statistics(
     )
 
     downside = returns[returns < 0]
-    downside_volatility = float(downside.std(ddof=1) * np.sqrt(periods_per_year)) if len(downside) > 1 else np.nan
+    downside_volatility = (
+        float(downside.std(ddof=1) * np.sqrt(periods_per_year))
+        if len(downside) > 1
+        else np.nan
+    )
     sortino = (
         (arithmetic_annualised - risk_free_rate) / downside_volatility
         if downside_volatility and downside_volatility > 0

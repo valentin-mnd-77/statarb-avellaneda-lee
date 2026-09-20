@@ -94,7 +94,7 @@ axes[1].axvline(config.n_factors, color="tab:green", ls="--", label=f"m = {confi
 axes[1].axhline(0.55, color="tab:red", ls="--", label="55% of variance")
 axes[1].set(xlabel="Components retained", ylabel="Cumulative", title="Cumulative variance")
 axes[1].legend(frameon=False)
-plt.tight_layout(); plt.show()
+plt.tight_layout()\nplt.show()
 
 print(f"first component alone: {shares[0]:.1%}")
 print(f"m = {config.n_factors}: {decomposition.total_explained_variance:.1%}")""",
@@ -186,7 +186,7 @@ for sign in (-1, 1):
 axis.set(title=f"{asset}: cumulative residual, kappa={row['kappa']:.1f}, "
                f"half-life={row['half_life_days']:.1f} days",
          ylabel="Cumulative residual")
-axis.legend(frameon=False); plt.show()""",
+axis.legend(frameon=False)\nplt.show()""",
     ),
     (
         "markdown",
@@ -275,7 +275,7 @@ unhedged.backtest.net_equity.plot(ax=axis, lw=1.2, label="unhedged, net of 5 bps
 hedged.backtest.gross_equity.plot(ax=axis, lw=1, ls="--", color="grey", label="hedged, gross")
 axis.axhline(1.0, color="black", lw=0.8)
 axis.set(ylabel="Growth of 1", title="The gap between the dashed and solid blue lines is the cost")
-axis.legend(frameon=False); plt.show()""",
+axis.legend(frameon=False)\nplt.show()""",
     ),
     (
         "markdown",

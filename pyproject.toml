@@ -35,6 +35,9 @@ addopts = "-q"
 [tool.ruff]
 line-length = 90
 target-version = "py310"
+# Notebook cell sources are prose and plotting code; the line-length rule adds
+# nothing there and build_notebook.py only holds those cells as string literals.
+exclude = ["notebooks", "scripts/build_notebook.py"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]

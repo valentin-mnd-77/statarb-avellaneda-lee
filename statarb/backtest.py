@@ -18,7 +18,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-import numpy as np
 import pandas as pd
 
 
@@ -66,7 +65,10 @@ def _to_equity(returns: pd.Series) -> pd.Series:
     if equity.empty:
         return equity
 
-    start = equity.index[0] - (equity.index[1] - equity.index[0]) if len(equity) > 1 else equity.index[0]
+    if len(equity) > 1:
+        start = equity.index[0] - (equity.index[1] - equity.index[0])
+    else:
+        start = equity.index[0]
     return pd.concat([pd.Series([1.0], index=[start]), equity])
 
 

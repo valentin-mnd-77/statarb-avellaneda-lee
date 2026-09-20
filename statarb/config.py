@@ -204,7 +204,7 @@ class StrategyConfig:
         """Time step in years, used to annualise the O-U parameters."""
         return 1.0 / TRADING_DAYS_PER_YEAR
 
-    def variant(self, **overrides) -> "StrategyConfig":
+    def variant(self, **overrides) -> StrategyConfig:
         """Return a copy with some fields replaced, for sensitivity runs."""
         return replace(self, **overrides)
 

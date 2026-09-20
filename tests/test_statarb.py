@@ -34,13 +34,13 @@ from statarb.pca import (
     n_factors_for_target_variance,
     principal_component_analysis,
 )
-from statarb.public_data import EURO_STOXX_50_YAHOO, download_public_data
 from statarb.portfolio import (
     apply_no_trade_band,
     hedge_factor_exposure,
     residual_factor_exposure,
     size_positions,
 )
+from statarb.public_data import EURO_STOXX_50_YAHOO, download_public_data
 from statarb.signals import SignalThresholds, compute_s_scores, update_positions
 
 
@@ -277,7 +277,6 @@ class TestOrnsteinUhlenbeck:
         assert false_positive_rate(504, n_paths=1000) < 0.10
 
     def test_centring_removes_the_cross_sectional_mean(self):
-        generator = np.random.default_rng(5)
         paths = {
             f"S{i}": simulate_ou(15.0, 0.02, 0.2, 500, random_state=i)
             for i in range(20)
@@ -367,11 +366,13 @@ class TestSignals:
         assert update_positions({}, pd.Series({"A": -1.20}), thresholds) == {}
 
         # Long: held while s <= -0.50, closed above it.
-        assert update_positions({"A": 1.0}, pd.Series({"A": -0.80}), thresholds) == {"A": 1.0}
+        held = update_positions({"A": 1.0}, pd.Series({"A": -0.80}), thresholds)
+        assert held == {"A": 1.0}
         assert update_positions({"A": 1.0}, pd.Series({"A": -0.40}), thresholds) == {}
 
         # Short: exits earlier, at 0.75, which is the paper's asymmetry.
-        assert update_positions({"A": -1.0}, pd.Series({"A": 0.80}), thresholds) == {"A": -1.0}
+        still_short = update_positions({"A": -1.0}, pd.Series({"A": 0.80}), thresholds)
+        assert still_short == {"A": -1.0}
         assert update_positions({"A": -1.0}, pd.Series({"A": 0.60}), thresholds) == {}
 
     def test_position_survives_a_score_that_stays_extreme(self):
@@ -502,7 +503,9 @@ class TestBacktest:
 # ----------------------------------------------------------------------
 class TestMetrics:
     def test_statistics_on_a_constant_return_series(self):
-        returns = pd.Series([0.001] * 252, index=pd.bdate_range("2022-01-03", periods=252))
+        returns = pd.Series(
+            [0.001] * 252, index=pd.bdate_range("2022-01-03", periods=252)
+        )
         statistics = performance_statistics(returns)
 
         assert statistics["annualised_volatility"] == pytest.approx(0.0)
@@ -622,6 +625,5 @@ class TestPublicDataLoader:
         assert len(EURO_STOXX_50_YAHOO) == 48
 
     def test_rejects_an_empty_download(self):
-        with self._patched(pd.DataFrame()):
-            with pytest.raises(ValueError, match="no data"):
-                download_public_data()
+        with self._patched(pd.DataFrame()), pytest.raises(ValueError, match="no data"):
+            download_public_data()
