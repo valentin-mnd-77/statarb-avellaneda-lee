@@ -1,3 +1,5 @@
+[![tests](https://github.com/valentin-mnd-77/statarb-avellaneda-lee/actions/workflows/tests.yml/badge.svg)](https://github.com/valentin-mnd-77/statarb-avellaneda-lee/actions/workflows/tests.yml)
+
 # Statistical arbitrage on the Euro Stoxx 50
 
 A from-scratch implementation of the PCA strand of Avellaneda & Lee, *Statistical
