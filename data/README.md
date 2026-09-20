@@ -18,5 +18,8 @@ production system needs point-in-time membership.
 calendars, so prices are forward-filled and the resulting artificial zero returns
 are reported by `statarb.data.coverage_report`.
 
-If you cannot redistribute your own market data, delete these files, add
-`data/*.csv` to `.gitignore`, and keep this note so the expected schema is clear.
+**The data is not included.** The total-return index levels and daily volumes
+come from a market data terminal and are not redistributable. The schema above
+is exactly what the code expects: a `Date` index and one column per ticker.
+Aggregated results remain in `results/`, and the full test suite runs without
+these files, since every test relies on simulated or hand-constructed series.
