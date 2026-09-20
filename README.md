@@ -284,6 +284,19 @@ simulated process; the vectorised AR(1) matches a loop of scalar regressions; th
 state machine satisfies a hand-written truth table; the hedge drives factor
 exposure to zero.
 
+## Data
+
+The market data is not distributed with this repository: the Euro Stoxx 50
+total-return index levels, daily volumes and GICS sector mapping come from a
+licensed terminal. `data/README.md` documents the expected schema — a `Date`
+index and one column per ticker — so the files can be dropped in from any
+comparable source.
+
+Everything that does not depend on that data is here: the full result tables in
+`results/`, the figures they produce, and an executed notebook with its outputs.
+The test suite runs unchanged on a fresh clone, since all 44 tests are built on
+simulated or hand-constructed series rather than on the market files.
+
 ---
 
 ## Running it
