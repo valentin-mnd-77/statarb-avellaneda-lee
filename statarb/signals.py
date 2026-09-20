@@ -77,7 +77,8 @@ def compute_s_scores(
         s_score = s_score - drift_correction
 
     # An asset that failed the kappa or b filter has no usable score.
-    return s_score.where(aligned["is_tradeable"].fillna(False), np.nan)
+    tradeable = aligned["is_tradeable"].reindex(last_level.index).astype("boolean")
+    return s_score.where(tradeable.fillna(False).astype(bool), np.nan)
 
 
 def update_positions(

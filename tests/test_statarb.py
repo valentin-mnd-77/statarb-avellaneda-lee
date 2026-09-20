@@ -619,7 +619,7 @@ class TestPublicDataLoader:
     def test_symbol_map_has_no_duplicates(self):
         symbols = list(EURO_STOXX_50_YAHOO.values())
         assert len(symbols) == len(set(symbols))
-        assert len(EURO_STOXX_50_YAHOO) == 50
+        assert len(EURO_STOXX_50_YAHOO) == 48
 
     def test_rejects_an_empty_download(self):
         with self._patched(pd.DataFrame()):

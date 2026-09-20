@@ -52,7 +52,11 @@ EURO_STOXX_50_YAHOO: dict[str, str] = {
     "BBVA.MC": "BBVA.MC",
     "BMWG.DE": "BMW.DE",
     "BNPP.PA": "BNP.PA",
-    "CRH.I": "CRH.L",
+    # CRH and Flutter moved their primary listing to the NYSE (2023 / 2024);
+    # Yahoo no longer serves their European history. Dropped rather than
+    # substituted with the USD line, which would add an FX exposure.
+    # "CRH.I": "CRH.L",
+    # "FLTRF.I": "FLTR.L",
     "DANO.PA": "BN.PA",
     "DB1Gn.DE": "DB1.DE",
     "DPWGn.DE": "DHL.DE",
@@ -60,7 +64,7 @@ EURO_STOXX_50_YAHOO: dict[str, str] = {
     "ENEI.MI": "ENEL.MI",
     "ENI.MI": "ENI.MI",
     "ESLX.PA": "EL.PA",
-    "FLTRF.I": "FLTR.L",
+    #"FLTRF.I": "FLTR.L",
     "HRMS.PA": "RMS.PA",
     "IBE.MC": "IBE.MC",
     "IFXGn.DE": "IFX.DE",
@@ -98,7 +102,7 @@ def download_public_data(
     start: str = DEFAULT_START,
     end: str = DEFAULT_END,
     symbols: dict[str, str] | None = None,
-    min_coverage: float = 0.5,
+    min_coverage: float = 0.02,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Download adjusted prices and volumes from Yahoo Finance.
 
@@ -109,9 +113,11 @@ def download_public_data(
             throughout the repository to Yahoo symbols. Defaults to
             :data:`EURO_STOXX_50_YAHOO`.
         min_coverage (float): Drop any name observed on less than this share of
-            the sample. Yahoo occasionally returns an empty series for a symbol
-            that has been renamed or delisted, and a column of missing values
-            would otherwise propagate into the estimation window.
+            the sample. Deliberately low: it is meant to catch symbols the API
+            returns empty, not late index entrants. Names that joined the index
+            mid-sample are handled per date by
+            :func:`statarb.data.prepare_estimation_window`, which admits them
+            once they have a full estimation window.
 
     Returns:
         tuple[pd.DataFrame, pd.DataFrame]: Prices and volumes, dates as index
