@@ -16,6 +16,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+public-data = [
+    "yfinance>=0.2.40",
+]
 dev = [
     "pytest>=7.4",
     "ruff>=0.5",

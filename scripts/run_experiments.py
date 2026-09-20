@@ -1,7 +1,8 @@
 """Run every experiment reported in the README and save the tables to ``results/``.
 
 Usage:
-    python scripts/run_experiments.py
+    python scripts/run_experiments.py                # licensed files in data/
+    python scripts/run_experiments.py --public-data  # Yahoo Finance substitute
 
 Each block answers one question:
   1. headline    - the paper's configuration, with and without the factor hedge
@@ -14,6 +15,7 @@ Each block answers one question:
 
 from __future__ import annotations
 
+import argparse
 import sys
 import time
 from pathlib import Path
@@ -71,11 +73,34 @@ def evaluate(signals, returns, config, label_extra=None):
     return net, backtest
 
 
-def main() -> None:
+def load_market_data(use_public_data: bool):
+    """Load either the licensed files or the Yahoo Finance substitute.
+
+    The licensed dataset is not distributed with this repository. The public
+    loader rebuilds an approximate stand-in so the pipeline runs anywhere; the
+    numbers will not match the README.
+    """
+    if not use_public_data:
+        return (
+            load_prices(DATA / "sx5e_underlyings.csv"),
+            load_volume(DATA / "volume.csv"),
+        )
+
+    from statarb.public_data import write_public_data
+
+    price_path = DATA / "public_sx5e_underlyings.csv"
+    volume_path = DATA / "public_volume.csv"
+    if not price_path.exists() or not volume_path.exists():
+        price_path, volume_path = write_public_data(DATA)
+
+    print("using the public-data substitute; results will differ from the README")
+    return load_prices(price_path), load_volume(volume_path)
+
+
+def main(use_public_data: bool = False) -> None:
     RESULTS.mkdir(exist_ok=True)
 
-    prices = load_prices(DATA / "sx5e_underlyings.csv")
-    volume = load_volume(DATA / "volume.csv")
+    prices, volume = load_market_data(use_public_data)
     returns = compute_returns(prices)
 
     coverage_report(prices, returns).to_csv(RESULTS / "00_data_coverage.csv")
@@ -202,4 +227,10 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--public-data",
+        action="store_true",
+        help="download a Yahoo Finance substitute instead of reading data/",
+    )
+    main(use_public_data=parser.parse_args().public_data)

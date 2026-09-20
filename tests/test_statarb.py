@@ -10,12 +10,17 @@ Run with:  pytest -q
 
 from __future__ import annotations
 
+import sys
+import types
+from unittest import mock
+
 import numpy as np
 import pandas as pd
 import pytest
 
 from statarb.backtest import align_weights, run_backtest
 from statarb.config import StrategyConfig
+from statarb.data import compute_returns, prepare_estimation_window
 from statarb.factor_model import extract_factors, fit_factor_regression
 from statarb.metrics import performance_statistics
 from statarb.ou import (
@@ -29,6 +34,7 @@ from statarb.pca import (
     n_factors_for_target_variance,
     principal_component_analysis,
 )
+from statarb.public_data import EURO_STOXX_50_YAHOO, download_public_data
 from statarb.portfolio import (
     apply_no_trade_band,
     hedge_factor_exposure,
@@ -523,3 +529,99 @@ class TestMetrics:
 
         expected = (returns.mean() * 252) / (returns.std(ddof=1) * np.sqrt(252))
         assert statistics["sharpe_ratio"] == pytest.approx(expected)
+
+
+# ----------------------------------------------------------------------
+# Public-data loader
+# ----------------------------------------------------------------------
+class TestPublicDataLoader:
+    """The loader is exercised against a stubbed yfinance.
+
+    Hitting the live API in a test suite would make it slow, flaky and dependent
+    on someone else's uptime. What is worth testing is the reshaping: pulling one
+    field out of a multi-indexed frame, renaming Yahoo symbols back to the
+    repository's tickers, stripping the timezone, and dropping series the API
+    returned empty.
+    """
+
+    @staticmethod
+    def _fake_download(n_days: int = 300, empty_symbol: str | None = None):
+        symbols = list(EURO_STOXX_50_YAHOO.values())
+        dates = pd.date_range("2013-01-02", periods=n_days, freq="B", tz="UTC")
+        generator = np.random.default_rng(0)
+
+        columns = pd.MultiIndex.from_product(
+            [["Close", "High", "Low", "Open", "Volume"], symbols]
+        )
+        values = np.empty((n_days, len(columns)))
+        for position, (field, _) in enumerate(columns):
+            values[:, position] = (
+                generator.integers(1e5, 1e7, n_days)
+                if field == "Volume"
+                else 100 * np.exp(np.cumsum(generator.standard_normal(n_days) * 0.01))
+            )
+
+        frame = pd.DataFrame(values, index=dates, columns=columns)
+        if empty_symbol is not None:
+            frame[("Close", empty_symbol)] = np.nan
+            frame[("Volume", empty_symbol)] = np.nan
+        return frame
+
+    def _patched(self, frame):
+        stub = types.SimpleNamespace(
+            __version__="stub", download=lambda **kwargs: frame
+        )
+        return mock.patch.dict(sys.modules, {"yfinance": stub})
+
+    def test_returns_repository_tickers_not_yahoo_symbols(self):
+        with self._patched(self._fake_download()):
+            prices, volumes = download_public_data()
+
+        assert "ADS.DE" not in prices.columns  # Yahoo symbol
+        assert "ADSGn.DE" in prices.columns  # repository ticker
+        assert prices.columns.equals(volumes.columns)
+
+    def test_index_is_naive_and_sorted(self):
+        with self._patched(self._fake_download()):
+            prices, _ = download_public_data()
+
+        assert prices.index.tz is None
+        assert prices.index.is_monotonic_increasing
+        assert prices.index.name == "Date"
+
+    def test_drops_symbols_the_api_returned_empty(self):
+        symbols = list(EURO_STOXX_50_YAHOO.values())
+        frame = self._fake_download(empty_symbol=symbols[3])
+
+        with self._patched(frame):
+            prices, volumes = download_public_data()
+
+        missing = [
+            ticker
+            for ticker, symbol in EURO_STOXX_50_YAHOO.items()
+            if symbol == symbols[3]
+        ][0]
+        assert missing not in prices.columns
+        assert missing not in volumes.columns
+
+    def test_output_feeds_the_estimation_pipeline(self):
+        """The whole point: the loader's output must be a drop-in substitute."""
+        with self._patched(self._fake_download()):
+            prices, _ = download_public_data()
+
+        returns = compute_returns(prices.ffill())
+        window, _ = prepare_estimation_window(returns, returns.index[-1], 252, 0.95)
+        decomposition = extract_factors(window, n_factors=4)
+
+        assert window.shape[0] == 252
+        assert decomposition.factors.shape[1] == 4
+
+    def test_symbol_map_has_no_duplicates(self):
+        symbols = list(EURO_STOXX_50_YAHOO.values())
+        assert len(symbols) == len(set(symbols))
+        assert len(EURO_STOXX_50_YAHOO) == 50
+
+    def test_rejects_an_empty_download(self):
+        with self._patched(pd.DataFrame()):
+            with pytest.raises(ValueError, match="no data"):
+                download_public_data()
