@@ -86,7 +86,7 @@ Four of the paper's choices replicate cleanly:
 
 | s_open | 1.00 | **1.25** | 1.50 | 2.00 |
 |---|---|---|---|---|
-| Gross Sharpe | 0.53 | **0.91** | 0.66 | 0.44 |
+| Gross Sharpe | 0.53 | **0.91** | 0.66 | 0. |
 | Signals held | 20.8 | 16.6 | 12.2 | 4.9 |
 
 The paper's 1.25 is the interior optimum, on a different continent and a
@@ -257,7 +257,7 @@ statarb/
   backtest.py      execution lag, PnL, turnover, costs
   metrics.py       performance statistics
   strategy.py      the walk-forward loop tying it together
-tests/             44 tests, all on independently known answers
+tests/             50 tests, all on independently known answers
 scripts/
   run_experiments.py  regenerates every table in results/
   make_figures.py     regenerates every figure from those tables
@@ -296,7 +296,7 @@ comparable source.
 
 Everything that does not depend on that data is here: the full result tables in
 `results/`, the figures they produce, and an executed notebook with its outputs.
-The test suite runs unchanged on a fresh clone, since all 44 tests are built on
+The test suite runs unchanged on a fresh clone, since all 50 tests are built on
 simulated or hand-constructed series rather than on the market files.
 
 ---
@@ -304,12 +304,12 @@ simulated or hand-constructed series rather than on the market files.
 ## Running it
 
 ```bash
-git clone https://github.com/<user>/statarb-avellaneda-lee.git
+git clone https://github.com/valentin-mnd-77/statarb-avellaneda-lee.git
 cd statarb-avellaneda-lee
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 
-pytest                              # 44 tests, ~1 second
+pytest                              # 50 tests, ~1 second
 python scripts/run_experiments.py   # ~8 minutes, writes results/
 python scripts/make_figures.py      # writes results/figures/
 ```
